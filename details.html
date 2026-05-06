@@ -151,6 +151,27 @@
       `<tr><td>Total</td>${(d.last3Totals||[]).map(v=>`<td>${compact(v)}</td>`).join('')}<td>${compact((d.last3Totals||[]).reduce((a,b)=>a+b,0))}</td></tr>`;
     }
 
+    // Expense log
+    const expLogDiv = document.getElementById('exp-log-section');
+    if (d.expenseLogLast2 && d.expenseLogLast2.length) {
+      expLogDiv.innerHTML = d.expenseLogLast2.map(mo =>
+        `<div class="exp-log-month">
+          <div class="exp-log-month-head"><span>📅 ${esc(mo.month)}</span><span class="mo-total">${fmtINR(mo.total)}</span></div>
+          <div style="overflow-x:auto">
+            <table class="exp-log-table">
+              <thead><tr><th>Date</th><th>Item / Description</th><th>Category</th><th class="amt">Amount</th></tr></thead>
+              <tbody>
+                ${mo.entries.map(e=>`<tr><td class="dt">${esc(fmtDate(e.date))}</td><td class="itm">${esc(e.item||e.category)}</td><td class="cat">${esc(e.category)}</td><td class="amt">${fmtINR(e.amount)}</td></tr>`).join('')}
+                <tr class="total-row"><td colspan="3" style="text-align:right">Monthly Total</td><td class="amt">${fmtINR(mo.total)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>`
+      ).join('');
+    } else {
+      expLogDiv.innerHTML = '<div class="exp-log-month"><div class="empty" style="text-align:center;padding:16px 0;">No expense log data available.</div></div>';
+    }
+
     // Doughnut chart
     const catColors = ['#4472C4','#C62828','#2E7D32','#BF8F00','#7B1FA2','#0097A7','#EF6C00','#455A64','#00838F','#9E9E9E'];
     if (catChart) catChart.destroy();
@@ -183,26 +204,7 @@
            <div class="amt">${fmtINR(e.amount)}</div></div>`).join('')
       : '<div class="empty">No expenses logged yet.</div>';
 
-    // Expense log
-    const expLogDiv = document.getElementById('exp-log-section');
-    if (d.expenseLogLast2 && d.expenseLogLast2.length) {
-      expLogDiv.innerHTML = d.expenseLogLast2.map(mo =>
-        `<div class="exp-log-month">
-          <div class="exp-log-month-head"><span>📅 ${esc(mo.month)}</span><span class="mo-total">${fmtINR(mo.total)}</span></div>
-          <div style="overflow-x:auto">
-            <table class="exp-log-table">
-              <thead><tr><th>Date</th><th>Item / Description</th><th>Category</th><th class="amt">Amount</th></tr></thead>
-              <tbody>
-                ${mo.entries.map(e=>`<tr><td class="dt">${esc(fmtDate(e.date))}</td><td class="itm">${esc(e.item||e.category)}</td><td class="cat">${esc(e.category)}</td><td class="amt">${fmtINR(e.amount)}</td></tr>`).join('')}
-                <tr class="total-row"><td colspan="3" style="text-align:right">Monthly Total</td><td class="amt">${fmtINR(mo.total)}</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>`
-      ).join('');
-    } else {
-      expLogDiv.innerHTML = '<div class="exp-log-month"><div class="empty" style="text-align:center;padding:16px 0;">No expense log data available.</div></div>';
-    }
+
   }
 
   load();
