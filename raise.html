@@ -19,37 +19,74 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1a1f2b; padding: 14px 12px 80px; font-size: 13px; }
 
-  .header { margin-bottom: 18px; }
+  .header { margin-bottom: 20px; }
   .header h1 { font-size: 19px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
   .header p  { font-size: 12px; color: var(--mute); margin-top: 4px; line-height: 1.5; }
 
-  .info-card {
-    background: #E8F5E9; border: 1.5px solid #2E7D32; border-radius: 12px;
-    padding: 12px 14px; margin-bottom: 16px;
-    font-size: 12px; color: #1B5E20; line-height: 1.6;
+  /* ── Steps card ── */
+  .steps-card {
+    background: var(--card); border-radius: 12px; padding: 16px 14px;
+    box-shadow: 0 1px 3px rgba(20,35,60,0.07); margin-bottom: 20px;
   }
-  .info-card strong { display: block; margin-bottom: 4px; font-size: 12.5px; }
+  .steps-card .sc-title {
+    font-size: 11px; font-weight: 700; color: var(--mute);
+    text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 14px;
+  }
+  .step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--navy); color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-body .step-title { font-size: 13px; font-weight: 600; color: #1a1f2b; }
+  .step-body .step-sub   { font-size: 11.5px; color: var(--mute); margin-top: 2px; line-height: 1.4; }
 
-  .form-container {
-    background: var(--card); border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(20,35,60,0.07); overflow: hidden;
-    margin-bottom: 14px;
+  /* ── Open Form button ── */
+  .form-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--navy); color: #fff; border-radius: 12px;
+    padding: 16px 20px; text-decoration: none;
+    font-size: 15px; font-weight: 700; letter-spacing: 0.2px;
+    box-shadow: 0 4px 12px rgba(31,58,95,0.3);
+    margin-bottom: 12px;
   }
-  .form-container iframe {
-    width: 100%; border: none; display: block;
-    min-height: 680px;
+  .form-btn:active { opacity: 0.9; transform: scale(0.99); }
+  .form-btn .btn-icon { font-size: 22px; }
+
+  .form-note {
+    text-align: center; font-size: 11px; color: var(--mute);
+    margin-bottom: 24px; line-height: 1.5;
   }
 
+  /* ── Categories reference ── */
+  .cat-card {
+    background: var(--card); border-radius: 12px; padding: 14px;
+    box-shadow: 0 1px 3px rgba(20,35,60,0.07); margin-bottom: 14px;
+  }
+  .cat-card .cat-title {
+    font-size: 11px; font-weight: 700; color: var(--mute);
+    text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px;
+  }
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .cat-chip {
+    background: #EEF2F7; color: var(--teal); font-size: 11.5px;
+    font-weight: 600; padding: 4px 10px; border-radius: 6px;
+  }
+
+  /* ── Tracker link ── */
   .tracker-link {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--card); border-radius: 12px; padding: 14px;
     box-shadow: 0 1px 3px rgba(20,35,60,0.07); text-decoration: none;
-    color: var(--navy); margin-bottom: 14px;
+    color: var(--navy);
   }
-  .tracker-link .tl-left .tl-title { font-size: 13px; font-weight: 700; }
-  .tracker-link .tl-left .tl-sub   { font-size: 11px; color: var(--mute); margin-top: 3px; }
-  .tracker-link .tl-arrow { font-size: 18px; color: var(--blue); }
+  .tl-title { font-size: 13px; font-weight: 700; }
+  .tl-sub   { font-size: 11px; color: var(--mute); margin-top: 3px; }
+  .tl-arrow { font-size: 20px; color: var(--blue); }
 
+  /* ── Bottom Nav ── */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; height: 60px; box-shadow: 0 -2px 8px rgba(20,35,60,0.08); z-index: 100; }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--mute); font-size: 9.5px; font-weight: 600; letter-spacing: 0.3px; }
   .nav-item .nav-icon { font-size: 20px; line-height: 1; }
@@ -63,25 +100,57 @@
   <p>Report any maintenance or common area problem. Our caretaker will be notified.</p>
 </div>
 
-<div class="info-card">
-  <strong>✅ How it works</strong>
-  Fill the form below → Your issue is logged instantly → It appears on the Issue Tracker within the next hourly refresh.
+<!-- How it works -->
+<div class="steps-card">
+  <div class="sc-title">How it works</div>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">Tap "Open Issue Form" below</div>
+      <div class="step-sub">The form opens in your browser. Fill in your flat, category and description.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Submit the form</div>
+      <div class="step-sub">Your issue is logged instantly in our records.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Come back and track it</div>
+      <div class="step-sub">Your issue appears on the Tracker within the next hourly refresh.</div>
+    </div>
+  </div>
 </div>
 
-<div class="form-container">
-  <iframe
-    src="https://forms.gle/sCANVUkeqJfJ64dU6?embedded=true"
-    frameborder="0"
-    marginheight="0"
-    marginwidth="0"
-    loading="lazy"
-    title="Report an Issue">
-    Loading form…
-  </iframe>
+<!-- Open Form button -->
+<a class="form-btn" href="https://forms.gle/sCANVUkeqJfJ64dU6" target="_blank" rel="noopener">
+  <span class="btn-icon">📋</span>
+  Open Issue Form
+</a>
+<div class="form-note">Opens in your browser — tap Back to return to the app</div>
+
+<!-- Categories reference -->
+<div class="cat-card">
+  <div class="cat-title">Issue Categories</div>
+  <div class="cat-chips">
+    <span class="cat-chip">Electrical</span>
+    <span class="cat-chip">Plumbing</span>
+    <span class="cat-chip">Lift / AMC</span>
+    <span class="cat-chip">Water Supply</span>
+    <span class="cat-chip">Common Area</span>
+    <span class="cat-chip">Security</span>
+    <span class="cat-chip">Cleanliness</span>
+    <span class="cat-chip">Other</span>
+  </div>
 </div>
 
+<!-- Go to tracker -->
 <a class="tracker-link" href="tracker.html">
-  <div class="tl-left">
+  <div>
     <div class="tl-title">🔧 View Issue Tracker</div>
     <div class="tl-sub">See all submitted issues and their current status</div>
   </div>
