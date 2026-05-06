@@ -1,16 +1,20 @@
-// Society Dashboard — Service Worker
+// Society Dashboard — Service Worker v2
 // Serves cached content when offline; always tries network first for data.json
 
-const CACHE_NAME = 'society-dash-v1';
+const CACHE_NAME = 'society-dash-v2';
 const STATIC_ASSETS = [
   './index.html',
+  './details.html',
+  './announce.html',
+  './raise.html',
+  './tracker.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
 ];
 
-// Install: cache static assets
+// Install: cache all static assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)

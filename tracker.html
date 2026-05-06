@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saila Society — Issue Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Saila Society">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root {
+    --navy:#1F3A5F; --blue:#4472C4; --green:#2E7D32; --red:#C62828;
+    --amber:#BF8F00; --teal:#00838F; --bg:#EEF2F7; --card:#ffffff;
+    --mute:#7b8491; --border:#E2E8F0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1a1f2b; padding: 14px 12px 80px; font-size: 13px; }
+
+  .header { margin-bottom: 14px; }
+  .header h1 { font-size: 19px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+  .header .stamp { font-size: 11px; color: var(--mute); margin-top: 2px; }
+
+  /* ── Summary counts ── */
+  .count-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .count-pill {
+    flex: 1; border-radius: 8px; padding: 9px 8px; text-align: center;
+    box-shadow: 0 1px 3px rgba(20,35,60,0.07);
+  }
+  .count-pill .cp-num  { font-size: 20px; font-weight: 700; line-height: 1; }
+  .count-pill .cp-lbl  { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+  .count-pill.open       { background: #FFF3E0; border: 1.5px solid #FF8F00; }
+  .count-pill.open .cp-num  { color: #BF6000; }
+  .count-pill.open .cp-lbl  { color: #BF6000; }
+  .count-pill.inprogress { background: #E3F2FD; border: 1.5px solid #4472C4; }
+  .count-pill.inprogress .cp-num { color: #1565C0; }
+  .count-pill.inprogress .cp-lbl { color: #1565C0; }
+  .count-pill.resolved   { background: #E8F5E9; border: 1.5px solid #2E7D32; }
+  .count-pill.resolved .cp-num { color: #2E7D32; }
+  .count-pill.resolved .cp-lbl { color: #2E7D32; }
+
+  /* ── Filters ── */
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .filter-btn {
+    flex-shrink: 0; padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--card); font-size: 11.5px; font-weight: 600; color: var(--mute);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* ── Issue cards ── */
+  .issue-card {
+    background: var(--card); border-radius: 12px; padding: 13px 14px;
+    margin-bottom: 10px; box-shadow: 0 1px 3px rgba(20,35,60,0.07);
+    border-left: 4px solid var(--border);
+  }
+  .issue-card.open       { border-left-color: #FF8F00; }
+  .issue-card.inprogress { border-left-color: var(--blue); }
+  .issue-card.resolved   { border-left-color: var(--green); }
+
+  .ic-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .ic-flat { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .ic-status {
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px;
+    text-transform: uppercase; letter-spacing: 0.4px; flex-shrink: 0;
+  }
+  .status-open       { background: #FFF3E0; color: #BF6000; }
+  .status-inprogress { background: #E3F2FD; color: #1565C0; }
+  .status-resolved   { background: #E8F5E9; color: #2E7D32; }
+
+  .ic-desc { font-size: 12.5px; color: #2d3748; margin-bottom: 7px; line-height: 1.5; }
+  .ic-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ic-cat  { font-size: 10.5px; background: #EEF2F7; color: var(--teal); padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+  .ic-date { font-size: 10.5px; color: var(--mute); }
+  .ic-photo { font-size: 10.5px; color: var(--blue); text-decoration: none; font-weight: 600; }
+
+  .ic-notes { margin-top: 8px; padding: 7px 9px; background: #F8FAFC; border-radius: 6px; font-size: 11.5px; color: #4a5568; border-left: 3px solid var(--teal); }
+  .ic-notes .notes-lbl { font-size: 9.5px; font-weight: 700; color: var(--mute); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+
+  .ic-resolved { margin-top: 6px; font-size: 11px; color: var(--green); }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--mute); }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+  .loading, .error { text-align: center; padding: 60px 20px; color: var(--mute); }
+  .error { color: var(--red); }
+
+  .raise-btn {
+    display: block; text-align: center; background: var(--navy); color: #fff;
+    border-radius: 10px; padding: 13px; font-size: 13px; font-weight: 700;
+    text-decoration: none; margin-bottom: 14px;
+  }
+
+  .refresh { position: fixed; bottom: 72px; right: 16px; background: var(--navy); color: #fff; border: none; width: 46px; height: 46px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(31,58,95,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .refresh:active { transform: scale(0.95); }
+  .refresh.spin { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; height: 60px; box-shadow: 0 -2px 8px rgba(20,35,60,0.08); z-index: 100; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--mute); font-size: 9.5px; font-weight: 600; letter-spacing: 0.3px; }
+  .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-item.active { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 Issue Tracker</h1>
+  <div class="stamp" id="stamp">Loading…</div>
+</div>
+
+<div id="loading" class="loading">Loading issues…</div>
+
+<div id="content" style="display:none">
+
+  <!-- Summary counts -->
+  <div class="count-row">
+    <div class="count-pill open">
+      <div class="cp-num" id="cnt-open">0</div>
+      <div class="cp-lbl">Open</div>
+    </div>
+    <div class="count-pill inprogress">
+      <div class="cp-num" id="cnt-inprog">0</div>
+      <div class="cp-lbl">In Progress</div>
+    </div>
+    <div class="count-pill resolved">
+      <div class="cp-num" id="cnt-res">0</div>
+      <div class="cp-lbl">Resolved</div>
+    </div>
+  </div>
+
+  <!-- Status filters -->
+  <div class="filters" id="status-filters">
+    <button class="filter-btn active" onclick="setFilter('status','all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('status','Open',this)">🟡 Open</button>
+    <button class="filter-btn" onclick="setFilter('status','In Progress',this)">🔵 In Progress</button>
+    <button class="filter-btn" onclick="setFilter('status','Resolved',this)">✅ Resolved</button>
+  </div>
+
+  <!-- Building filters -->
+  <div class="filters" id="bld-filters">
+    <button class="filter-btn active" onclick="setFilter('bld','all',this)">All Flats</button>
+    <button class="filter-btn" onclick="setFilter('bld','A-',this)">Block A</button>
+    <button class="filter-btn" onclick="setFilter('bld','B-',this)">Block B</button>
+  </div>
+
+  <a class="raise-btn" href="raise.html">➕ Report a New Issue</a>
+
+  <div id="issue-list"></div>
+
+</div>
+
+<button class="refresh" id="refreshBtn" onclick="load()" title="Refresh">↻</button>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Home</a>
+  <a class="nav-item" href="details.html"><span class="nav-icon">📊</span>Details</a>
+  <a class="nav-item" href="announce.html"><span class="nav-icon">📢</span>Notice</a>
+  <a class="nav-item active" href="tracker.html"><span class="nav-icon">🔧</span>Tracker</a>
+  <a class="nav-item" href="raise.html"><span class="nav-icon">➕</span>Raise</a>
+</nav>
+
+<script>
+  const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  let allIssues = [];
+  let activeStatus = 'all';
+  let activeBld    = 'all';
+
+  function load() {
+    document.getElementById('refreshBtn').classList.add('spin');
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').className = 'loading';
+    document.getElementById('loading').textContent = 'Loading issues…';
+
+    fetch('./data.json?t=' + Date.now())
+      .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(txt => {
+        let d; try{d=JSON.parse(txt);}catch(ex){throw new Error('Bad JSON');}
+        allIssues = d.issues || [];
+        renderCounts(d.issueCounts || {});
+        document.getElementById('stamp').textContent = 'Updated ' + (d.generatedAt||'');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        renderIssues();
+        document.getElementById('refreshBtn').classList.remove('spin');
+      })
+      .catch(err => {
+        document.getElementById('loading').className = 'error';
+        document.getElementById('loading').textContent = 'Error: ' + err.message;
+        document.getElementById('refreshBtn').classList.remove('spin');
+      });
+  }
+
+  function renderCounts(ic) {
+    document.getElementById('cnt-open').textContent   = ic.open   || 0;
+    document.getElementById('cnt-inprog').textContent = ic.inProgress || 0;
+    document.getElementById('cnt-res').textContent    = ic.resolved  || 0;
+  }
+
+  function setFilter(type, val, btn) {
+    if (type === 'status') {
+      activeStatus = val;
+      document.querySelectorAll('#status-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    } else {
+      activeBld = val;
+      document.querySelectorAll('#bld-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    }
+    btn.classList.add('active');
+    renderIssues();
+  }
+
+  function renderIssues() {
+    let filtered = allIssues.filter(issue => {
+      const matchStatus = activeStatus === 'all' || issue.status === activeStatus;
+      const matchBld    = activeBld    === 'all' || issue.flat.startsWith(activeBld);
+      return matchStatus && matchBld;
+    });
+
+    const el = document.getElementById('issue-list');
+    if (filtered.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>No issues found for this filter.</p></div>`;
+      return;
+    }
+
+    el.innerHTML = filtered.map(issue => {
+      const statusKey = issue.status === 'In Progress' ? 'inprogress'
+                      : issue.status === 'Resolved'    ? 'resolved' : 'open';
+      const statusCls = `status-${statusKey}`;
+      const cardCls   = statusKey;
+
+      // Shorten category label for display
+      const shortCat = issue.category
+        .replace(/\s*\(.*\)/g, '')   // remove parenthetical e.g. (e.g., lift, ...)
+        .trim();
+
+      const photoLink = issue.location && issue.location.startsWith('http')
+        ? `<a class="ic-photo" href="${esc(issue.location)}" target="_blank">📷 View Photo</a>`
+        : (issue.location ? `<span class="ic-date">📍 ${esc(issue.location)}</span>` : '');
+
+      const notesHtml = issue.notes
+        ? `<div class="ic-notes"><div class="notes-lbl">Committee Notes</div>${esc(issue.notes)}</div>`
+        : '';
+
+      const resolvedHtml = issue.resolvedDate
+        ? `<div class="ic-resolved">✅ Resolved on ${esc(issue.resolvedDate)}</div>`
+        : '';
+
+      return `<div class="issue-card ${cardCls}">
+        <div class="ic-top">
+          <div class="ic-flat">${esc(issue.flat)}</div>
+          <div class="ic-status ${statusCls}">${esc(issue.status)}</div>
+        </div>
+        <div class="ic-desc">${esc(issue.description)}</div>
+        <div class="ic-meta">
+          <span class="ic-cat">${esc(shortCat)}</span>
+          <span class="ic-date">📅 ${esc(issue.date)}</span>
+          ${photoLink}
+        </div>
+        ${notesHtml}
+        ${resolvedHtml}
+      </div>`;
+    }).join('');
+  }
+
+  load();
+</script>
+</body>
+</html>
