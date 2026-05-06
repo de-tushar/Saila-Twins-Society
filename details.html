@@ -87,6 +87,9 @@
     </div>
   </div>
 
+  <div class="section-title">Expense Log — Last 2 Months</div>
+  <div id="exp-log-section"></div>
+
   <div class="section-title">Expense by Category (YTD)</div>
   <div class="card"><canvas id="chart-cat" height="240"></canvas></div>
 
@@ -98,9 +101,6 @@
     <h2>⭐ Highest Expenses</h2>
     <div id="top-expenses"></div>
   </div>
-
-  <div class="section-title">Expense Log — Last 2 Months</div>
-  <div id="exp-log-section"></div>
 
 </div>
 
@@ -172,7 +172,7 @@
       expLogDiv.innerHTML = '<div class="exp-log-month"><div class="empty" style="text-align:center;padding:16px 0;">No expense log data available.</div></div>';
     }
 
-    // Doughnut chart
+    // Doughnut chart — after expense log
     const catColors = ['#4472C4','#C62828','#2E7D32','#BF8F00','#7B1FA2','#0097A7','#EF6C00','#455A64','#00838F','#9E9E9E'];
     if (catChart) catChart.destroy();
     catChart = new Chart(document.getElementById('chart-cat'), {
@@ -210,4 +210,4 @@
   load();
 </script>
 </body>
-</html>
+</html
