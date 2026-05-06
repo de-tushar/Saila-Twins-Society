@@ -1,13 +1,14 @@
 // Society Dashboard — Service Worker v2
 // Serves cached content when offline; always tries network first for data.json
 
-const CACHE_NAME = 'society-dash-v2';
+const CACHE_NAME = 'society-dash-v3';
 const STATIC_ASSETS = [
   './index.html',
   './details.html',
   './announce.html',
   './raise.html',
   './tracker.html',
+  './auth.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
