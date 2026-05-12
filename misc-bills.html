@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saila Society — Notices</title>
+<title>Saila Society — Misc Bills</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,43 +18,36 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1a1f2b; padding: 14px 12px 80px; font-size: 13px; }
+
   .header { margin-bottom: 18px; }
   .header h1 { font-size: 19px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
   .header .stamp { font-size: 11px; color: var(--mute); margin-top: 2px; }
 
-  .announce-card {
-    background: var(--card); border-radius: 12px; margin-bottom: 12px;
-    box-shadow: 0 1px 3px rgba(20,35,60,0.07); overflow: hidden;
+  .bill-card {
+    background: var(--card); border-radius: 12px; padding: 13px 15px;
+    margin-bottom: 10px; box-shadow: 0 1px 3px rgba(20,35,60,0.07);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border-left: 4px solid var(--amber);
   }
-  .announce-card .ac-top {
-    padding: 12px 14px 10px;
-    border-left: 4px solid var(--blue);
+  .bill-left { flex: 1; min-width: 0; }
+  .bill-type { font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1.3; word-break: break-word; }
+  .bill-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .bill-month { font-size: 11px; color: var(--mute); }
+  .bill-amt { font-size: 11.5px; font-weight: 700; color: var(--green); }
+  .bill-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--navy); color: #fff; border-radius: 8px;
+    padding: 8px 12px; font-size: 11.5px; font-weight: 700;
+    text-decoration: none; flex-shrink: 0;
   }
-  .announce-card.urgent .ac-top { border-left-color: var(--red); }
-  .announce-card .ac-badge {
-    display: inline-block; font-size: 9.5px; font-weight: 700;
-    padding: 2px 7px; border-radius: 4px; margin-bottom: 7px;
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-  .announce-card.urgent .ac-badge { background: #FFEBEE; color: var(--red); }
-  .announce-card.normal .ac-badge  { background: #E3F2FD; color: var(--blue); }
-  .announce-card .ac-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-  .announce-card .ac-msg   { font-size: 12.5px; color: #2d3748; line-height: 1.6; }
-  .announce-card .ac-footer {
-    background: #f8fafc; padding: 7px 14px;
-    font-size: 10.5px; color: var(--mute);
-    border-top: 1px solid var(--border);
-  }
+  .bill-btn:active { opacity: 0.85; }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--mute); }
   .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-state p { font-size: 13px; }
-
   .loading, .error { text-align: center; padding: 60px 20px; color: var(--mute); }
   .error { color: var(--red); }
 
   .refresh { position: fixed; bottom: 72px; right: 16px; background: var(--navy); color: #fff; border: none; width: 46px; height: 46px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(31,58,95,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .refresh:active { transform: scale(0.95); }
   .refresh.spin { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -67,12 +60,12 @@
 <body>
 
 <div class="header">
-  <h1>📢 Society Notices</h1>
+  <h1>🧾 Misc. Bills</h1>
   <div class="stamp" id="stamp">Loading…</div>
 </div>
 
-<div id="content"></div>
-<div id="loading" class="loading">Loading notices…</div>
+<div id="loading" class="loading">Loading…</div>
+<div id="content" style="display:none"></div>
 
 <button class="refresh" id="refreshBtn" onclick="load()" title="Refresh">↻</button>
 
@@ -85,19 +78,23 @@
 
 <script>
   const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = n => n > 0 ? '₹' + Number(n).toLocaleString('en-IN') : '';
 
   function load() {
     document.getElementById('refreshBtn').classList.add('spin');
-    document.getElementById('content').innerHTML = '';
     document.getElementById('loading').style.display = 'block';
     document.getElementById('loading').className = 'loading';
-    document.getElementById('loading').textContent = 'Loading notices…';
+    document.getElementById('loading').textContent = 'Loading…';
+    document.getElementById('content').style.display = 'none';
 
     fetch('./data.json?t=' + Date.now())
       .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
       .then(txt => {
-        let d; try{d=JSON.parse(txt);}catch(ex){throw new Error('Bad JSON');}
-        render(d);
+        let d; try{d=JSON.parse(txt);}catch(e){throw new Error('Bad JSON');}
+        document.getElementById('stamp').textContent = 'Updated ' + (d.generatedAt||'');
+        render(d.miscBills || []);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
         document.getElementById('refreshBtn').classList.remove('spin');
       })
       .catch(err => {
@@ -107,26 +104,23 @@
       });
   }
 
-  function render(d) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('stamp').textContent = 'Updated ' + (d.generatedAt || '');
+  function render(items) {
     const el = document.getElementById('content');
-
-    if (!d.announcements || d.announcements.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No active announcements right now.</p><p style="margin-top:8px;font-size:11.5px;">Check back later for society notices.</p></div>`;
+    if (!items.length) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No bills uploaded yet.</p></div>`;
       return;
     }
-
-    el.innerHTML = d.announcements.map(a =>
-      `<div class="announce-card ${a.priority==='Urgent'?'urgent':'normal'}">
-        <div class="ac-top">
-          <div class="ac-badge">${a.priority==='Urgent'?'🚨 Urgent':'📢 Notice'}</div>
-          <div class="ac-title">${esc(a.title)}</div>
-          <div class="ac-msg">${esc(a.message)}</div>
+    el.innerHTML = items.map(b => `
+      <div class="bill-card">
+        <div class="bill-left">
+          <div class="bill-type">${esc(b.billType)}</div>
+          <div class="bill-meta">
+            <span class="bill-month">📅 ${esc(b.month)}</span>
+            ${b.amount > 0 ? `<span class="bill-amt">${fmt(b.amount)}</span>` : ''}
+          </div>
         </div>
-        <div class="ac-footer">📅 Posted: ${esc(a.date)}</div>
-      </div>`
-    ).join('');
+        ${b.pdfLink ? `<a class="bill-btn" href="${esc(b.pdfLink)}" target="_blank" rel="noopener">📄 View</a>` : ''}
+      </div>`).join('');
   }
 
   load();

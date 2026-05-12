@@ -91,7 +91,8 @@
   .progress-bar .fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.5s ease; }
   .maint-card .pct { font-size: 9.5px; color: var(--mute); margin-top: 3px; }
 
-  /* ── Unpaid flats ── */
+  /* ── Pending top alert ── */
+  #pending-top { margin-bottom: 12px; }
   .unpaid-card { background: #FFF3E0; border: 1.5px solid #FF8F00; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
   .unpaid-card .up-head { font-size: 10.5px; font-weight: 700; color: #BF6000; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
   .unpaid-bld { font-size: 10px; font-weight: 700; color: var(--mute); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 5px; }
@@ -157,6 +158,9 @@
   <div class="stamp" id="stamp">Loading…</div>
 </div>
 
+<!-- Pending maintenance — shown at top when any flat has not paid -->
+<div id="pending-top" style="display:none;"></div>
+
 <div id="announce-section"></div>
 
 <div id="content" style="display:none">
@@ -188,18 +192,13 @@
     </div>
   </div>
 
-  <div class="section-title">Pending Maintenance — This Month</div>
-  <div class="unpaid-card">
-    <div id="unpaid-body"><div class="all-paid">Loading…</div></div>
-  </div>
-
   <div class="section-title">Issues Overview</div>
   <div class="issue-strip">
     <div>
       <div class="is-label">Active Issues</div>
       <div id="is-counts" class="is-counts" style="margin-top:5px;"></div>
     </div>
-    <a href="tracker.html">View All →</a>
+    <a href="issues.html">View All →</a>
   </div>
 
 </div>
@@ -215,14 +214,11 @@
   <a class="nav-item" href="details.html">
     <span class="nav-icon">📊</span>Details
   </a>
-  <a class="nav-item" href="announce.html">
-    <span class="nav-icon">📢</span>Notice
+  <a class="nav-item" href="issues.html">
+    <span class="nav-icon">🔧</span>Issues
   </a>
-  <a class="nav-item" href="tracker.html">
-    <span class="nav-icon">🔧</span>Tracker
-  </a>
-  <a class="nav-item" href="raise.html">
-    <span class="nav-icon">➕</span>Raise
+  <a class="nav-item" href="more.html">
+    <span class="nav-icon">☰</span>More
   </a>
 </nav>
 
@@ -279,10 +275,10 @@
     document.getElementById('k-ctk-date').textContent   = d.caretakerLastDate || '';
     document.getElementById('k-cur-exp').textContent    = compact(d.currentMonthExpense);
 
-    // Unpaid flats
-    const unpaidDiv = document.getElementById('unpaid-body');
+    // Unpaid flats — rendered at top of page
+    const pendingTop = document.getElementById('pending-top');
     if (!d.unpaidFlats || d.unpaidFlats.length === 0) {
-      unpaidDiv.innerHTML = '<div class="all-paid">✅ All flats have paid for this month</div>';
+      pendingTop.style.display = 'none';
     } else {
       const byBld = {};
       d.unpaidFlats.forEach(f => {
@@ -290,12 +286,15 @@
         byBld[f.building].push(f.flat);
       });
       const total = d.unpaidFlats.length;
-      unpaidDiv.innerHTML =
-        `<div class="up-head">⚠ ${total} flat${total>1?'s':''} yet to pay</div>` +
+      pendingTop.style.display = 'block';
+      pendingTop.innerHTML =
+        `<div class="unpaid-card">` +
+        `<div class="up-head">⚠ Pending Maintenance — This Month &nbsp;·&nbsp; ${total} flat${total>1?'s':''} yet to pay</div>` +
         Object.entries(byBld).map(([bld, flats]) =>
           `<div class="unpaid-bld">${esc(bld)}</div>
            <div class="flat-chips">${flats.map(f=>`<span class="flat-chip">${esc(f)}</span>`).join('')}</div>`
-        ).join('');
+        ).join('') +
+        `</div>`;
     }
 
     // Announcements banner (top 2 only, link to more)

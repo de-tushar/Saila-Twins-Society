@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saila Society — Caretaker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Saila Society">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root {
+    --navy:#1F3A5F; --blue:#4472C4; --green:#2E7D32; --red:#C62828;
+    --amber:#BF8F00; --teal:#00838F; --bg:#EEF2F7; --card:#ffffff;
+    --mute:#7b8491; --border:#E2E8F0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1a1f2b; padding: 14px 12px 80px; font-size: 13px; }
+
+  .header { margin-bottom: 18px; }
+  .header h1 { font-size: 19px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+  .header .stamp { font-size: 11px; color: var(--mute); margin-top: 2px; }
+
+  /* Info card — key/value rows */
+  .info-card {
+    background: var(--card); border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(20,35,60,0.07); margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .info-row {
+    display: flex; align-items: flex-start; padding: 12px 15px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key   { font-size: 11.5px; font-weight: 700; color: var(--mute); width: 110px; flex-shrink: 0; padding-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .info-val   { font-size: 13.5px; color: #1a1f2b; flex: 1; font-weight: 500; line-height: 1.4; }
+  .info-val.phone { color: var(--teal); font-weight: 700; }
+
+  /* PDF row */
+  .doc-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--navy); color: #fff; border-radius: 8px;
+    padding: 9px 14px; font-size: 12px; font-weight: 700;
+    text-decoration: none; margin-top: 4px;
+  }
+  .doc-btn:active { opacity: 0.85; }
+
+  /* Last pay highlight */
+  .pay-card {
+    background: #E8F5E9; border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 16px; border-left: 4px solid var(--green);
+  }
+  .pay-lbl { font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .pay-val  { font-size: 20px; font-weight: 800; color: var(--green); }
+  .pay-date { font-size: 11.5px; color: #388E3C; margin-top: 2px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--mute); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+  .empty-state .hint { font-size: 11.5px; margin-top: 8px; opacity: 0.8; }
+  .loading, .error { text-align: center; padding: 60px 20px; color: var(--mute); }
+  .error { color: var(--red); }
+
+  .refresh { position: fixed; bottom: 72px; right: 16px; background: var(--navy); color: #fff; border: none; width: 46px; height: 46px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(31,58,95,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .refresh.spin { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; height: 60px; box-shadow: 0 -2px 8px rgba(20,35,60,0.08); z-index: 100; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--mute); font-size: 9.5px; font-weight: 600; letter-spacing: 0.3px; }
+  .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-item.active { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧹 Caretaker</h1>
+  <div class="stamp" id="stamp">Loading…</div>
+</div>
+
+<div id="loading" class="loading">Loading…</div>
+<div id="content" style="display:none"></div>
+
+<button class="refresh" id="refreshBtn" onclick="load()" title="Refresh">↻</button>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Home</a>
+  <a class="nav-item" href="details.html"><span class="nav-icon">📊</span>Details</a>
+  <a class="nav-item" href="issues.html"><span class="nav-icon">🔧</span>Issues</a>
+  <a class="nav-item active" href="more.html"><span class="nav-icon">☰</span>More</a>
+</nav>
+
+<script>
+  const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function load() {
+    document.getElementById('refreshBtn').classList.add('spin');
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').className = 'loading';
+    document.getElementById('loading').textContent = 'Loading…';
+    document.getElementById('content').style.display = 'none';
+
+    fetch('./data.json?t=' + Date.now())
+      .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(txt => {
+        let d; try{d=JSON.parse(txt);}catch(e){throw new Error('Bad JSON');}
+        document.getElementById('stamp').textContent = 'Updated ' + (d.generatedAt||'');
+        render(d);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('refreshBtn').classList.remove('spin');
+      })
+      .catch(err => {
+        document.getElementById('loading').className = 'error';
+        document.getElementById('loading').textContent = 'Error: ' + err.message;
+        document.getElementById('refreshBtn').classList.remove('spin');
+      });
+  }
+
+  function render(d) {
+    const el = document.getElementById('content');
+    const ct = d.caretaker || {};
+    const keys = Object.keys(ct).filter(k => k !== 'PDF_Link' && k !== 'pdf_link' && k !== 'pdfLink');
+
+    // Always show last payment from main data
+    let html = '';
+    if (d.caretakerLastPayment) {
+      html += `<div class="pay-card">
+        <div class="pay-lbl">Last Salary Paid</div>
+        <div class="pay-val">₹${Number(d.caretakerLastPayment).toLocaleString('en-IN')}</div>
+        <div class="pay-date">📅 ${esc(d.caretakerLastDate || '')}</div>
+      </div>`;
+    }
+
+    if (keys.length === 0 && !d.caretakerLastPayment) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">🧹</div><p>No caretaker details added yet.</p><p class="hint">Add Field/Value rows to the Caretaker sheet<br>in Google Sheets (e.g. Name, Phone, Address).</p></div>`;
+      return;
+    }
+
+    if (keys.length > 0) {
+      html += `<div class="info-card">`;
+      keys.forEach(k => {
+        const v = ct[k] || '';
+        const isPhone = /phone|mobile|contact/i.test(k);
+        const isPdf   = /pdf|doc|link/i.test(k) && v.startsWith('http');
+        if (isPdf) {
+          html += `<div class="info-row">
+            <div class="info-key">${esc(k)}</div>
+            <div class="info-val"><a class="doc-btn" href="${esc(v)}" target="_blank" rel="noopener">📄 Open Document</a></div>
+          </div>`;
+        } else {
+          html += `<div class="info-row">
+            <div class="info-key">${esc(k)}</div>
+            <div class="info-val ${isPhone ? 'phone' : ''}">${esc(v)}</div>
+          </div>`;
+        }
+      });
+      html += `</div>`;
+
+      // If there's a PDF_Link key, show it separately
+      const pdfKey = Object.keys(ct).find(k => /pdf|doc|link/i.test(k));
+      if (pdfKey && ct[pdfKey] && ct[pdfKey].startsWith('http') && !keys.includes(pdfKey)) {
+        html += `<a class="doc-btn" href="${esc(ct[pdfKey])}" target="_blank" rel="noopener">📄 View Contract / Agreement</a>`;
+      }
+    }
+
+    el.innerHTML = html;
+  }
+
+  load();
+</script>
+</body>
+</html>
