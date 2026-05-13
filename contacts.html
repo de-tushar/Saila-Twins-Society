@@ -38,13 +38,15 @@
   .contact-name    { font-size: 14px; font-weight: 700; color: var(--navy); }
   .contact-details { font-size: 11.5px; color: var(--mute); margin-top: 2px; line-height: 1.4; }
   .contact-phone   { font-size: 12.5px; color: var(--teal); margin-top: 4px; font-weight: 600; }
-  .call-btn {
+  .action-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .call-btn, .wa-btn {
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; border-radius: 50%;
-    background: #E8F5E9; color: var(--green);
     text-decoration: none; font-size: 20px; flex-shrink: 0;
   }
-  .call-btn:active { opacity: 0.8; }
+  .call-btn { background: #E8F5E9; color: var(--green); }
+  .wa-btn   { background: #E7F9EF; color: #25D366; }
+  .call-btn:active, .wa-btn:active { opacity: 0.8; }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--mute); }
   .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
@@ -109,6 +111,14 @@
       });
   }
 
+  // Build WhatsApp number: strip non-digits, prepend 91 if 10-digit Indian number
+  function waNum(phone) {
+    let n = phone.replace(/\D/g, '');
+    if (n.startsWith('0')) n = '91' + n.slice(1);
+    if (n.length === 10) n = '91' + n;
+    return n;
+  }
+
   function render(items) {
     const el = document.getElementById('content');
     if (!items.length) {
@@ -118,6 +128,7 @@
     el.innerHTML = items.map(c => {
       const initials = (c.name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
       const hasPhone = c.phone && c.phone.trim() !== '';
+      const wn = hasPhone ? waNum(c.phone) : '';
       return `
         <div class="contact-card">
           <div class="contact-avatar">${esc(initials)}</div>
@@ -126,7 +137,11 @@
             ${c.details ? `<div class="contact-details">${esc(c.details)}</div>` : ''}
             ${hasPhone ? `<div class="contact-phone">${esc(c.phone)}</div>` : ''}
           </div>
-          ${hasPhone ? `<a class="call-btn" href="tel:${esc(c.phone.replace(/\s/g,''))}" title="Call">📞</a>` : ''}
+          ${hasPhone ? `
+          <div class="action-btns">
+            <a class="call-btn" href="tel:${esc(c.phone.replace(/\s/g,''))}" title="Call">📞</a>
+            <a class="wa-btn"   href="https://wa.me/${esc(wn)}" target="_blank" rel="noopener" title="WhatsApp">💬</a>
+          </div>` : ''}
         </div>`;
     }).join('');
   }
