@@ -172,13 +172,29 @@
     }
 
     // Doughnut chart — after expense log
+    // Use d.categories if populated; otherwise derive from topExpenses
+    let catData = (d.categories && d.categories.length) ? d.categories : [];
+    if (!catData.length && d.topExpenses && d.topExpenses.length) {
+      const map = {};
+      d.topExpenses.forEach(e => {
+        const cat = e.category || 'Other';
+        map[cat] = (map[cat] || 0) + (Number(e.amount) || 0);
+      });
+      catData = Object.entries(map)
+        .map(([category, amount]) => ({ category, amount }))
+        .sort((a, b) => b.amount - a.amount);
+    }
     const catColors = ['#4472C4','#C62828','#2E7D32','#BF8F00','#7B1FA2','#0097A7','#EF6C00','#455A64','#00838F','#9E9E9E'];
     if (catChart) catChart.destroy();
-    catChart = new Chart(document.getElementById('chart-cat'), {
-      type: 'doughnut',
-      data: { labels: d.categories.map(c=>c.category), datasets: [{ data: d.categories.map(c=>c.amount), backgroundColor: catColors, borderWidth: 0 }] },
-      options: { cutout:'56%', plugins: { legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:7 } }, tooltip:{ callbacks:{ label: ctx => ctx.label+': '+fmtINR(ctx.raw) } } } }
-    });
+    if (catData.length) {
+      catChart = new Chart(document.getElementById('chart-cat'), {
+        type: 'doughnut',
+        data: { labels: catData.map(c=>c.category), datasets: [{ data: catData.map(c=>c.amount), backgroundColor: catColors, borderWidth: 0 }] },
+        options: { cutout:'56%', plugins: { legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:7 } }, tooltip:{ callbacks:{ label: ctx => ctx.label+': '+fmtINR(ctx.raw) } } } }
+      });
+    } else {
+      document.getElementById('chart-cat').parentElement.innerHTML = '<div class="empty" style="text-align:center;padding:20px 0;">No expense data available.</div>';
+    }
 
     // Bar chart
     const barH = Math.max(200, d.combined.length * 28);
