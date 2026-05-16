@@ -47,6 +47,26 @@
   }
   .doc-btn:active { opacity: 0.85; }
 
+  /* Payment history */
+  .section-title {
+    font-size: 12px; font-weight: 700; color: var(--mute);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+  }
+  .pay-history {
+    background: var(--card); border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(20,35,60,0.07); overflow: hidden;
+  }
+  .pay-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 15px; border-bottom: 1px solid var(--border);
+  }
+  .pay-row:last-child { border-bottom: none; }
+  .pay-row-left { display: flex; flex-direction: column; gap: 2px; }
+  .pay-row-label { font-size: 13px; font-weight: 600; color: #1a1f2b; }
+  .pay-row-date  { font-size: 11px; color: var(--mute); }
+  .pay-row-amt   { font-size: 14px; font-weight: 800; color: var(--green); }
+
   /* Last pay highlight */
   .pay-card {
     background: #E8F5E9; border-radius: 12px; padding: 14px 16px;
@@ -119,6 +139,13 @@
       });
   }
 
+  function formatDate(iso) {
+    if (!iso) return '';
+    const [y, m, day] = iso.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+  }
+
   function render(d) {
     const el = document.getElementById('content');
     const ct = d.caretaker || {};
@@ -164,6 +191,26 @@
       if (pdfKey && ct[pdfKey] && ct[pdfKey].startsWith('http') && !keys.includes(pdfKey)) {
         html += `<a class="doc-btn" href="${esc(ct[pdfKey])}" target="_blank" rel="noopener">📄 View Contract / Agreement</a>`;
       }
+    }
+
+    // Payment history from topExpenses
+    const payments = (d.topExpenses || [])
+      .filter(e => e.category === 'Caretaker Pay')
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    if (payments.length > 0) {
+      html += `<div class="section-title">💰 Payment History</div>`;
+      html += `<div class="pay-history">`;
+      payments.forEach(p => {
+        html += `<div class="pay-row">
+          <div class="pay-row-left">
+            <div class="pay-row-label">${esc(p.item || 'Salary')}</div>
+            <div class="pay-row-date">📅 ${formatDate(p.date)}</div>
+          </div>
+          <div class="pay-row-amt">₹${Number(p.amount).toLocaleString('en-IN')}</div>
+        </div>`;
+      });
+      html += `</div>`;
     }
 
     el.innerHTML = html;
