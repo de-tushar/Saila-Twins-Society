@@ -144,7 +144,7 @@
       keys.forEach(k => {
         const v = ct[k] || '';
         const isPhone = /phone|mobile|contact/i.test(k);
-        const isPdf   = /pdf|doc|link/i.test(k) && v.startsWith('http');
+        const isPdf   = v.startsWith('http');
         if (isPdf) {
           html += `<div class="info-row">
             <div class="info-key">${esc(k)}</div>
