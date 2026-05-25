@@ -92,7 +92,8 @@
       .then(txt => {
         let d; try{d=JSON.parse(txt);}catch(e){throw new Error('Bad JSON');}
         document.getElementById('stamp').textContent = 'Updated ' + (d.generatedAt||'');
-        render(d.miscBills || []);
+        const bills = (d.miscBills || []).slice().sort((a,b) => (b.dateSort||'').localeCompare(a.dateSort||''));
+        render(bills);
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         document.getElementById('refreshBtn').classList.remove('spin');
