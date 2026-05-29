@@ -150,6 +150,114 @@
   .refresh.spin { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ── AI Chatbot ── */
+  #chat-fab {
+    position: fixed; bottom: 126px; right: 16px;
+    background: linear-gradient(135deg, #4472C4, #1F3A5F);
+    color: #fff; border: none; width: 46px; height: 46px;
+    border-radius: 50%; font-size: 22px;
+    box-shadow: 0 4px 14px rgba(31,58,95,0.4); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; transition: transform 0.2s;
+  }
+  #chat-fab:active { transform: scale(0.93); }
+  #chat-fab .chat-badge {
+    position: absolute; top: -3px; right: -3px;
+    background: #E53935; color: #fff; font-size: 8px; font-weight: 700;
+    border-radius: 50%; width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+  }
+  #chat-panel {
+    position: fixed; bottom: 182px; right: 12px;
+    width: calc(100vw - 24px); max-width: 380px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(20,35,60,0.22);
+    display: none; flex-direction: column;
+    z-index: 199; overflow: hidden;
+    border: 1px solid var(--border);
+    max-height: 70vh;
+  }
+  #chat-panel.open { display: flex; }
+  .chat-header {
+    background: linear-gradient(135deg, #1F3A5F, #4472C4);
+    color: #fff; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chat-header .ch-title { font-size: 13px; font-weight: 700; }
+  .chat-header .ch-sub { font-size: 10px; opacity: 0.75; margin-top: 1px; }
+  .chat-header button {
+    background: none; border: none; color: #fff;
+    font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 4px;
+  }
+  #chat-key-bar {
+    background: #FFF8E1; border-bottom: 1px solid #FFE082;
+    padding: 10px 12px; display: flex; gap: 8px; align-items: center;
+  }
+  #chat-key-bar input {
+    flex: 1; border: 1px solid #FFD54F; border-radius: 8px;
+    padding: 6px 10px; font-size: 11.5px; outline: none;
+    background: #fff;
+  }
+  #chat-key-bar button {
+    background: var(--navy); color: #fff; border: none;
+    border-radius: 8px; padding: 6px 12px; font-size: 11.5px;
+    cursor: pointer; font-weight: 600; white-space: nowrap;
+  }
+  #chat-key-bar .key-hint {
+    font-size: 10px; color: #BF8F00; flex-basis: 100%; margin-top: 4px;
+  }
+  #chat-messages {
+    flex: 1; overflow-y: auto; padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 120px;
+  }
+  .chat-msg { max-width: 88%; font-size: 12.5px; line-height: 1.5; }
+  .chat-msg.bot {
+    align-self: flex-start;
+    background: #EEF2F7; border-radius: 0 10px 10px 10px;
+    padding: 9px 12px; color: #1a1f2b;
+  }
+  .chat-msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #4472C4, #1F3A5F);
+    border-radius: 10px 0 10px 10px;
+    padding: 9px 12px; color: #fff;
+  }
+  .chat-msg.thinking {
+    align-self: flex-start;
+    background: #EEF2F7; border-radius: 0 10px 10px 10px;
+    padding: 9px 12px; color: var(--mute); font-style: italic;
+  }
+  .chat-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 0 12px 10px;
+  }
+  .chat-chip {
+    background: #EEF2F7; border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 11px; font-size: 11px;
+    cursor: pointer; color: var(--navy); font-weight: 600;
+    transition: background 0.15s;
+  }
+  .chat-chip:active { background: #dce6f5; }
+  .chat-input-row {
+    display: flex; gap: 8px; padding: 10px 12px;
+    border-top: 1px solid var(--border);
+  }
+  #chat-input {
+    flex: 1; border: 1px solid var(--border); border-radius: 20px;
+    padding: 8px 14px; font-size: 12.5px; outline: none;
+    font-family: inherit;
+  }
+  #chat-input:focus { border-color: var(--blue); }
+  #chat-send {
+    background: var(--navy); color: #fff; border: none;
+    width: 36px; height: 36px; border-radius: 50%;
+    font-size: 15px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
   /* ── Bottom Nav ── */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -403,6 +511,176 @@
 
   load();
   loadWeather();
+</script>
+
+<!-- ── AI Chatbot Widget ── -->
+<button id="chat-fab" onclick="toggleChat()" title="Ask AI about society data">
+  🤖
+  <span class="chat-badge" id="chat-badge" style="display:none">1</span>
+</button>
+
+<div id="chat-panel">
+  <div class="chat-header">
+    <div>
+      <div class="ch-title">🤖 Society AI Assistant</div>
+      <div class="ch-sub">Powered by Gemini 1.5 Flash · Ask anything about the society</div>
+    </div>
+    <button onclick="toggleChat()">✕</button>
+  </div>
+
+  <div id="chat-key-bar">
+    <input type="password" id="api-key-input" placeholder="Paste your Gemini API key here…" />
+    <button onclick="saveApiKey()">Save</button>
+    <span class="key-hint">🔒 Stored only on this device. Never sent anywhere except Google AI.</span>
+  </div>
+
+  <div id="chat-messages">
+    <div class="chat-msg bot">
+      👋 Hi! I'm your Saila Society AI assistant.<br><br>
+      I can answer questions about maintenance dues, payments, expenses, flat owners, issues, and more — all from the live society data.<br><br>
+      Just type your question below to get started!
+    </div>
+  </div>
+
+  <div class="chat-chips" id="chat-chips">
+    <span class="chat-chip" onclick="askChip(this)">Who has pending dues?</span>
+    <span class="chat-chip" onclick="askChip(this)">Total collected this month</span>
+    <span class="chat-chip" onclick="askChip(this)">List open issues</span>
+    <span class="chat-chip" onclick="askChip(this)">Fund balance summary</span>
+  </div>
+
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Ask about dues, payments, flats…"
+      onkeydown="if(event.key==='Enter')sendChat()" />
+    <button id="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const WORKER_URL = 'https://saila-ai.tusharkde77.workers.dev/';
+  const DATA_URL   = './data.json';
+  let cachedData   = null;
+  let chatHistory  = [];
+
+  // ── Panel toggle ──
+  window.toggleChat = function() {
+    const panel = document.getElementById('chat-panel');
+    const isOpen = panel.classList.toggle('open');
+    if (isOpen) {
+      document.getElementById('chat-badge').style.display = 'none';
+      document.getElementById('chat-key-bar').style.display = 'none';
+    }
+    if (isOpen) setTimeout(() => document.getElementById('chat-input').focus(), 200);
+  };
+
+  // ── Chip shortcuts ──
+  window.askChip = function(el) {
+    document.getElementById('chat-input').value = el.textContent;
+    sendChat();
+  };
+
+  // ── Add message bubble ──
+  function addMsg(role, text) {
+    const box = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + role;
+    div.innerHTML = text.replace(/\n/g, '<br>');
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return div;
+  }
+
+  // ── Fetch society data ──
+  async function getData() {
+    if (cachedData) return cachedData;
+    try {
+      const r = await fetch(DATA_URL);
+      cachedData = await r.json();
+      return cachedData;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  // ── Build system prompt ──
+  async function buildSystemPrompt() {
+    const data = await getData();
+    const dataStr = data
+      ? JSON.stringify(data, null, 2).slice(0, 28000) // stay within token limits
+      : 'Data unavailable.';
+    return `You are a helpful AI assistant for Saila Twins Housing Society, Nayabad, Kolkata.
+You have access to the live society data below. Answer questions conversationally, clearly and concisely.
+Use ₹ for Indian Rupees. Format amounts with commas (e.g. ₹1,200). Be friendly and helpful.
+If asked about a specific flat, give details for that flat. Do not reveal internal JSON structure.
+
+SOCIETY DATA:
+${dataStr}`;
+  }
+
+  // ── Send message ──
+  window.sendChat = async function() {
+    const input = document.getElementById('chat-input');
+    const question = input.value.trim();
+    if (!question) return;
+
+    input.value = '';
+    document.getElementById('chat-send').disabled = true;
+    addMsg('user', question);
+    const thinkingEl = addMsg('thinking', '⏳ Thinking…');
+
+    try {
+      const systemPrompt = await buildSystemPrompt();
+      chatHistory.push({ role: 'user', parts: [{ text: question }] });
+
+      const body = {
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: chatHistory,
+        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+      };
+
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        const errMsg = json?.error?.message || 'API error';
+        thinkingEl.className = 'chat-msg bot';
+        thinkingEl.innerHTML = `❌ Error: ${errMsg}`;
+        chatHistory.pop();
+        return;
+      }
+
+      const reply = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!reply) {
+        const detail = json?.error?.message || json?.promptFeedback?.blockReason || JSON.stringify(json).slice(0, 200);
+        thinkingEl.className = 'chat-msg bot';
+        thinkingEl.innerHTML = `❌ No reply from Gemini.<br><small style="color:#888">${detail}</small>`;
+        chatHistory.pop();
+        return;
+      }
+      chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+      thinkingEl.className = 'chat-msg bot';
+      thinkingEl.innerHTML = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+      // Keep history to last 10 turns to avoid token overflow
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+    } catch(e) {
+      thinkingEl.className = 'chat-msg bot';
+      thinkingEl.innerHTML = '❌ Network error. Please try again.';
+      chatHistory.pop();
+    } finally {
+      document.getElementById('chat-send').disabled = false;
+      document.getElementById('chat-messages').scrollTop = 9999;
+    }
+  };
+})();
 </script>
 </body>
 </html>
