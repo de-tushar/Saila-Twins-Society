@@ -560,8 +560,9 @@
 (function() {
   const WORKER_URL = 'https://saila-ai.tusharkde77.workers.dev/';
   const DATA_URL   = './data.json';
+  const AI_MODEL   = 'llama-3.1-8b-instant';
   let cachedData   = null;
-  let chatHistory  = [];
+  let chatHistory  = []; // stores {role, content} in OpenAI format
 
   // ── Panel toggle ──
   window.toggleChat = function() {
@@ -607,7 +608,7 @@
   async function buildSystemPrompt() {
     const data = await getData();
     const dataStr = data
-      ? JSON.stringify(data, null, 2).slice(0, 28000) // stay within token limits
+      ? JSON.stringify(data).slice(0, 8000) // compact JSON, smaller payload
       : 'Data unavailable.';
     return `You are a helpful AI assistant for Saila Twins Housing Society, Nayabad, Kolkata.
 You have access to the live society data below. Answer questions conversationally, clearly and concisely.
@@ -631,12 +632,16 @@ ${dataStr}`;
 
     try {
       const systemPrompt = await buildSystemPrompt();
-      chatHistory.push({ role: 'user', parts: [{ text: question }] });
+      chatHistory.push({ role: 'user', content: question });
 
       const body = {
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: chatHistory,
-        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+        model: AI_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...chatHistory
+        ],
+        temperature: 0.3,
+        max_tokens: 800
       };
 
       const res = await fetch(WORKER_URL, {
@@ -655,15 +660,15 @@ ${dataStr}`;
         return;
       }
 
-      const reply = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const reply = json?.choices?.[0]?.message?.content;
       if (!reply) {
-        const detail = json?.error?.message || json?.promptFeedback?.blockReason || JSON.stringify(json).slice(0, 200);
+        const detail = json?.error?.message || JSON.stringify(json).slice(0, 200);
         thinkingEl.className = 'chat-msg bot';
-        thinkingEl.innerHTML = `❌ No reply from Gemini.<br><small style="color:#888">${detail}</small>`;
+        thinkingEl.innerHTML = `❌ No reply from AI.<br><small style="color:#888">${detail}</small>`;
         chatHistory.pop();
         return;
       }
-      chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+      chatHistory.push({ role: 'assistant', content: reply });
 
       thinkingEl.className = 'chat-msg bot';
       thinkingEl.innerHTML = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
